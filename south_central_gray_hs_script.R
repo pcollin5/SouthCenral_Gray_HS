@@ -1,0 +1,438 @@
+#### Kepler Head Start Investigation ####
+
+#### load packages ####  
+
+packages <- c("RColorBrewer","acs", "tidyverse", "tidycensus", "tigris", "leaflet", "mapview", "tmap", "DT", "sf", "gganimate", "report", "ipumsr", "xtable", "kableExtra", "knitr", "RgoogleMaps", "stargazer")
+
+lapply(packages, library, character.only = TRUE)
+
+#### get data for the hawkins school system, kepler elementary school, mcpheters bend, fugate hill classrooms ####
+
+#### load the variable names ####
+
+dp_table_variables_18 <- load_variables(2018, "acs5/profile", cache = TRUE)
+
+new_names_18 <- c("variable", "label", "concept")
+
+names(dp_table_variables_18) <- new_names_18   
+
+#### hawkins school system ####
+
+tnss_dp02_2018 <- get_acs(geography = "school district (unified)", state = "TN", table = "DP02", year = 2018, cache = TRUE)
+
+tnss_dp03_2018 <- get_acs(geography = "school district (unified)", state = "TN", table = "DP03", year = 2018, cache = TRUE)
+
+tnss_dp04_2018 <- get_acs(geography = "school district (unified)", state = "TN", table = "DP04", year = 2018, cache = TRUE)
+
+tnss_dp05_2018 <- get_acs(geography = "school district (unified)", state = "TN", table = "DP05", year = 2018, cache = TRUE)
+
+tnss_dp02_18 <- inner_join(tnss_dp02_2018, dp_table_variables_18, by = "variable")
+
+tnss_dp03_18 <- inner_join(tnss_dp03_2018, dp_table_variables_18, by = "variable")
+
+tnss_dp04_18 <- inner_join(tnss_dp04_2018, dp_table_variables_18, by = "variable")
+
+tnss_dp05_18 <- inner_join(tnss_dp05_2018, dp_table_variables_18, by = "variable")
+
+tn_data_profile_18 <- rbind(tnss_dp02_18, tnss_dp03_18, tnss_dp04_18, tnss_dp05_18)
+
+districts <- school_districts(state = "TN", type = "unified", refresh = TRUE)
+
+districts <- st_as_sf(districts)
+
+### need washington and greene county school districts ###
+
+greene_18 <- districts %>%
+  filter(NAME == "Greene County School District")
+
+gchs_dp_18 <- tn_data_profile_18 %>%
+  filter(NAME == "Greene County School District, Tennessee")
+
+wash_18 <- districts %>%
+  filter(NAME == "Washington County School District")
+
+wchs_dp_18 <- tn_data_profile_18 %>%
+  filter(NAME == "Washington County School District, Tennessee")
+
+#### pull washington and Greene census tract data ####
+
+#greene
+
+Greene_dp02_2018 <- get_acs(geography = "tract", county = "Greene", state = "TN", table = "DP02", year = 2018, geometry = TRUE, cache = TRUE)
+
+Greene_dp03_2018 <- get_acs(geography = "tract", county = "Greene", state = "TN", table = "DP03", year = 2018, geometry = TRUE, cache = TRUE)
+
+Greene_dp04_2018 <- get_acs(geography = "tract", county = "Greene", state = "TN", table = "DP04", year = 2018, geometry = TRUE, cache = TRUE)
+
+Greene_dp05_2018 <- get_acs(geography = "tract", county = "Greene", state = "TN", table = "DP05", year = 2018, geometry = TRUE, cache = TRUE)    
+
+Greene_dp02_18 <- inner_join(Greene_dp02_2018, dp_table_variables_18, by = "variable")
+
+Greene_dp03_18 <- inner_join(Greene_dp03_2018, dp_table_variables_18, by = "variable")
+
+Greene_dp04_18 <- inner_join(Greene_dp04_2018, dp_table_variables_18, by = "variable")
+
+Greene_dp05_18 <- inner_join(Greene_dp05_2018, dp_table_variables_18, by = "variable")
+
+Greene_data_profile <- rbind(Greene_dp02_18, Greene_dp03_18, Greene_dp04_18, Greene_dp05_18)
+
+#washington
+
+Washington_dp02_2018 <- get_acs(geography = "tract", county = "Washington", state = "TN", table = "DP02", year = 2018, geometry = TRUE, cache = TRUE)
+
+Washington_dp03_2018 <- get_acs(geography = "tract", county = "Washington", state = "TN", table = "DP03", year = 2018, geometry = TRUE, cache = TRUE)
+
+Washington_dp04_2018 <- get_acs(geography = "tract", county = "Washington", state = "TN", table = "DP04", year = 2018, geometry = TRUE, cache = TRUE)
+
+Washington_dp05_2018 <- get_acs(geography = "tract", county = "Washington", state = "TN", table = "DP05", year = 2018, geometry = TRUE, cache = TRUE)    
+
+Washington_dp02_18 <- inner_join(Washington_dp02_2018, dp_table_variables_18, by = "variable")
+
+Washington_dp03_18 <- inner_join(Washington_dp03_2018, dp_table_variables_18, by = "variable")
+
+Washington_dp04_18 <- inner_join(Washington_dp04_2018, dp_table_variables_18, by = "variable")
+
+Washington_dp05_18 <- inner_join(Washington_dp05_2018, dp_table_variables_18, by = "variable")
+
+Washington_data_profile <- rbind(Washington_dp02_18, Washington_dp03_18, Washington_dp04_18, Washington_dp05_18)
+
+
+
+### use geoid's because its easier to filter ###
+
+wash_hs_GEOID <- c(47179061901, 47179061402, 47179060900, 47179061100, 47179060100, 47179061602, 47179061902, 47179060800)
+
+chuckey_hs_GEOID <- c(47059090900)
+
+wash_hs_tracts <- Washington_data_profile %>%
+  filter(GEOID %in% wash_hs_GEOID)
+
+chuckey_hs_tract <- Greene_data_profile %>%
+  filter(GEOID %in% chuckey_hs_GEOID)
+
+wash_no_hs_tracts <- Washington_data_profile %>%
+  filter(!GEOID %in% wash_hs_GEOID)
+
+
+# add the school names to the location data frame #
+
+south_central <- wash_hs_tracts %>%
+  filter(GEOID == 47179061901)
+
+school <- rep("South Central", length(south_central$GEOID))
+
+sc <- cbind(school, south_central)
+
+chuckey <- chuckey_hs_tract
+
+school <- rep("Chuckey", length(chuckey$GEOID))
+
+chu <- cbind(school, chuckey)
+
+west_view <- wash_hs_tracts %>%
+  filter(GEOID == 47179061901)
+
+school <- rep("West View", length(west_view$GEOID))
+
+wv <- cbind(school, west_view)
+
+boones <- wash_hs_tracts %>%
+  filter(GEOID == 47179061402)
+
+school <- rep("Boones Creek", length(boones$GEOID))
+
+bc <- cbind(school, boones)
+
+child <- wash_hs_tracts %>%
+  filter(GEOID == 47179060900)
+
+school <- rep("Children First", length(child$GEOID))
+
+cf <- cbind(school, child)
+
+lake <- wash_hs_tracts %>%
+  filter(GEOID == 47179061100)
+
+school <- rep("Lake Terrace", length(lake$GEOID))
+
+lt <- cbind(school, lake)
+
+dunbar <- wash_hs_tracts %>%
+  filter(GEOID == 47179060100)
+
+school <- rep("Dunbar", length(dunbar$GEOID))
+
+dun <- cbind(school, dunbar)
+
+harmony <- wash_hs_tracts %>%
+  filter(GEOID == 47179061602)
+
+school <- rep("Harmony", length(harmony$GEOID))
+
+harm <- cbind(school, harmony)
+
+grandview <- wash_hs_tracts %>%
+  filter(GEOID == 47179061902)
+
+school <-rep("Grandview", length(grandview$GEOID))
+
+gv <- cbind(school, grandview)
+
+southside <- wash_hs_tracts %>%
+  filter(GEOID == 47179060800)
+
+school <- rep("South Side", length(southside$GEOID))
+
+ss <- cbind(school, southside)
+
+pretty_tracts <- rbind(sc, chu, wv, bc, cf, lt, dun, harm, gv, ss)
+
+head(pretty_tracts)
+
+####pull out the variables we need ####
+
+hs_vars <- c("DP02_0045", "DP02_0046", "DP02_0047", "DP02_0053", "DP02_0071", "DP02_0112", "DP02_0151", "DP02_0152", "DP03_0009", "DP03_0062", "DP03_0072", "DP03_0074", "DP03_0119", "DP03_0121",
+             "DP05_0001", "DP05_0005", "DP05_0018", "DP05_0064")
+
+hs_per_vars <- c("DP02_0045P", "DP02_0046P", "DP02_0047P", "DP02_0053P", "DP02_0071P", "DP02_0112P", "DP02_0151P", "DP02_0152P", "DP03_0009P", "DP03_0062P", "DP03_0072P", "DP03_0074P", "DP03_0119P", "DP03_0121P",
+                 "DP05_0001P", "DP05_0005P","DP05_0018P", "DP05_0064P")
+
+hs_vars_names <- c("Grandparent living in household and responsible for children under 1", "Grandparent living in household and responsible for children 1-2 years old", "Grandparent living in household and responsible for children 3-4 years olds",
+                   "Children enrolled in preschool or nursery school", "Citizens with a Disability", "Population ESL", "Households with a Computer", "Households with Broadband internet", "Unemployment Rate", "Median Income",
+                   "Total Households with Cash Public Assistance", "Total Households with SNAP", "Percentage of all families below poverty line", "Percentage of all families below poverty line with children under 5",
+                   "Total Population", "Population Age under 5","Median Age", "Population Racially White")
+
+
+df_tracts <- pretty_tracts %>%
+  filter(variable %in% hs_vars)
+
+df_per_tracts <- pretty_tracts %>%
+  filter(variable %in% hs_per_vars)
+
+df_combined <- cbind(hs_vars_names, df_tracts, df_per_tracts)
+
+trimmed_df <- df_combined[,c(1,2,4,6,7,14,15)]
+
+###get rid of location for tables 
+
+no_location_trimmed_df <- st_set_geometry(trimmed_df, NULL)
+
+###make new names for table 
+
+hs_table_names <- c("Measure", "Head Start Location", "Census Tract", "Count", "Margin of Error", "Percent", "Percent Margin of Error")
+
+names(no_location_trimmed_df) <- hs_table_names
+
+wash_hs_datatable <- datatable(no_location_trimmed_df, caption = "Various Metrics for Washington County (and Chuckey) Census Tracts Containing a Head Start")
+
+wash_hs_datatable
+
+##pdf table##
+
+xtable(no_location_trimmed_df %>% filter(`Head Start Location`== "South Central"))
+
+###### repeat that for washington county tracts without a head start ####
+
+nohs_df_tracts <- wash_no_hs_tracts %>%
+  filter(variable %in% hs_vars)
+
+nohs_df_per_tracts <- wash_no_hs_tracts %>%
+  filter(variable %in% hs_per_vars)
+
+nohs_df_combined <- cbind(hs_vars_names, nohs_df_tracts, nohs_df_per_tracts)
+
+names(nohs_df_combined)
+
+trimmed_nohs_df <- nohs_df_combined[,c(1,3,5,6,12,13)]
+
+###get rid of location for tables 
+
+no_location_trimmed_nohs_df <- st_set_geometry(trimmed_nohs_df, NULL)
+
+### make data table ###
+
+nohs_table_names <- c("Measure", "Census Tract", "Count", "Margin of Error", "Percent", "Percent Margin of Error")
+
+names(no_location_trimmed_nohs_df) <- nohs_table_names
+
+wash_nohs_datatable <- datatable(no_location_trimmed_nohs_df, caption = "Various Metrics for Washington County Census Tracts WITHOUT a Head Start")
+
+View(nohs_df_tracts %>% filter(GEOID == 47179060400))
+View(nohs_df_per_tracts %>% filter(GEOID == 47179060400))
+
+
+### worry about this ^^^ later ##
+
+### test for differences between south central and other head start school tracts ####
+
+wash_hs_datatable
+
+#gp < 1
+#gp 1-2
+#gp 3-4
+#enrolled in preschool
+#disability
+#esl
+#household with computer
+#household with internet
+#unemployment rate
+#median income
+#cash public assistance
+#snap
+#all fam below poverty line
+#all families with children <5 below poverty line
+#total pop
+#total pop under 5
+#median age
+#pop racially white
+
+
+### try and write a function that does this at once
+head(no_location_trimmed_df)
+
+easy <- no_location_trimmed_df
+
+southcentral <- easy %>%
+  filter(`Head Start Location` == "South Central")
+
+boonescreek <- easy %>%
+  filter(`Head Start Location` == "Boones Creek")
+
+chuckey <- easy %>%
+  filter(`Head Start Location` == "Chuckey")
+
+westview <- easy %>%
+  filter(`Head Start Location` == "West View")
+
+childrenfirst <- easy %>%
+  filter(`Head Start Location` == "Children First")
+
+laketerrace <- easy %>%
+  filter(`Head Start Location` == "Lake Terrace")
+
+dunbar <- easy %>%
+  filter(`Head Start Location` == "Dunbar")
+
+Harmony <- easy %>%
+  filter(`Head Start Location` == "Harmony")
+
+Grandview <- easy %>%
+  filter(`Head Start Location`== "Grandview")
+
+southside <- easy %>%
+  filter(`Head Start Location` == "South Side")
+
+vector_names <- as.character(southcentral$Measure)
+
+
+
+
+
+sc_vs_bc_perc <- significance(southcentral$Percent, boonescreek$Percent, southcentral$`Percent Margin of Error`, boonescreek$`Percent Margin of Error`, 0.95)
+
+sc_vs_bc_counts <- significance(southcentral$Count, boonescreek$Count, southcentral$`Margin of Error`, boonescreek$`Margin of Error`, clevel = 0.95)
+
+sc_vs_chuckey_perc <- significance(southcentral$Percent, chuckey$Percent, southcentral$`Percent Margin of Error`, chuckey$`Percent Margin of Error`, clevel = 0.95)
+
+sc_vs_chuckey_counts <- significance(southcentral$Count, chuckey$Count, southcentral$`Margin of Error`, chuckey$`Margin of Error`, clevel = 0.95)
+
+southcentral_vs_chuckey <- data.frame(vector_names, sc_vs_chuckey_perc, sc_vs_chuckey_counts, southcentral$Percent, chuckey$Percent, southcentral$Count, chuckey$Count)
+
+southcentral_vs_boonescreek <- data.frame(vector_names, sc_vs_bc_perc, sc_vs_bc_counts, southcentral$Percent, boonescreek$Percent, southcentral$Count, boonescreek$Count)
+
+sc_vs_cf_perc <- significance(southcentral$Percent, childrenfirst$Percent, southcentral$`Percent Margin of Error`, childrenfirst$`Percent Margin of Error`, 0.95)
+
+sc_vs_cf_counts <- significance(southcentral$Count, childrenfirst$Count, southcentral$`Margin of Error`, childrenfirst$`Margin of Error`, clevel = 0.95)
+
+southcentral_vs_childrenfirst <- data.frame(vector_names, sc_vs_cf_perc, sc_vs_cf_counts, southcentral$Percent, childrenfirst$Percent, southcentral$Count, childrenfirst$Count)
+
+sc_vs_lt_perc <- significance(southcentral$Percent, laketerrace$Percent, southcentral$`Percent Margin of Error`, laketerrace$`Percent Margin of Error`, 0.95)
+
+sc_vs_lt_counts <- significance(southcentral$Count, laketerrace$Count, southcentral$`Margin of Error`, laketerrace$`Margin of Error`, clevel = 0.95)
+
+southcentral_vs_laketerrace <- data.frame(vector_names, sc_vs_lt_perc, sc_vs_lt_counts, southcentral$Percent, laketerrace$Percent, southcentral$Count, laketerrace$Count)
+
+#dunbar
+
+sc_vs_db_perc <- significance(southcentral$Percent, dunbar$Percent, southcentral$`Percent Margin of Error`, dunbar$`Percent Margin of Error`, 0.95)
+
+sc_vs_db_counts <- significance(southcentral$Count, dunbar$Count, southcentral$`Margin of Error`, dunbar$`Margin of Error`, clevel = 0.95)
+
+southcentral_vs_dunbar <- data.frame(vector_names, sc_vs_db_perc, sc_vs_db_counts, southcentral$Percent, dunbar$Percent, southcentral$Count, dunbar$Count)
+
+#harmony
+
+sc_vs_hm_perc <- significance(southcentral$Percent, Harmony$Percent, southcentral$`Percent Margin of Error`, Harmony$`Percent Margin of Error`, 0.95)
+
+sc_vs_hm_counts <- significance(southcentral$Count, Harmony$Count, southcentral$`Margin of Error`, Harmony$`Margin of Error`, clevel = 0.95)
+
+southcentral_vs_harmony <- data.frame(vector_names, sc_vs_hm_perc, sc_vs_hm_counts, southcentral$Percent, Harmony$Percent, southcentral$Count, Harmony$Count)
+
+
+#grandview
+
+sc_vs_gv_perc <- significance(southcentral$Percent, Grandview$Percent, southcentral$`Percent Margin of Error`, Grandview$`Percent Margin of Error`, 0.95)
+
+sc_vs_gv_counts <- significance(southcentral$Count, Grandview$Count, southcentral$`Margin of Error`, Grandview$`Margin of Error`, clevel = 0.95)
+
+southcentral_vs_grandview <- data.frame(vector_names, sc_vs_gv_perc, sc_vs_gv_counts, southcentral$Percent, Grandview$Percent, southcentral$Count, Grandview$Count)
+
+#southside
+
+sc_vs_ss_perc <- significance(southcentral$Percent, southside$Percent, southcentral$`Percent Margin of Error`, southside$`Percent Margin of Error`, 0.95)
+
+sc_vs_ss_counts <- significance(southcentral$Count, southside$Count, southcentral$`Margin of Error`, southside$`Margin of Error`, clevel = 0.95)
+
+southcentral_vs_southside <- data.frame(vector_names, sc_vs_ss_perc, sc_vs_ss_counts, southcentral$Percent, southside$Percent, southcentral$Count, southside$Count)
+
+#data tables of significance
+
+datatable(southcentral_vs_boonescreek)
+datatable(southcentral_vs_chuckey)
+datatable(southcentral_vs_childrenfirst)
+datatable(southcentral_vs_laketerrace)
+datatable(southcentral_vs_dunbar)
+datatable(southcentral_vs_harmony)
+datatable(southcentral_vs_grandview)
+datatable(southcentral_vs_southside)
+
+## other tables for report 
+
+under_5 <- no_location_trimmed_df %>%
+  filter(Measure == "Population Age under 5")
+
+under_5_bar <-under_5 %>%
+  ggplot(aes(y = Percent, x = `Head Start Location`, fill = `Head Start Location`)) + 
+  geom_bar(position = "stack", stat = "identity") +
+  scale_color_brewer(palette = "Dark2")+ 
+  ggtitle("Percent of Population under 5 Years Old")
+
+median_income <- no_location_trimmed_df %>%
+  filter(Measure == "Median Income")
+
+median_income_bar <- median_income %>%
+  ggplot(aes(y = Count, x = `Head Start Location`, fill = `Head Start Location`)) + 
+  geom_bar(position = "stack", stat = "identity") +
+  scale_color_brewer(palette = "Dark2")+ 
+  ggtitle("Median Income") +
+  ylab("Median Income in Dollars")
+
+white <- no_location_trimmed_df %>%
+  filter(Measure == "Population Racially White")
+
+white_bar <- white%>%
+  ggplot(aes(y = Percent, x = `Head Start Location`, fill = `Head Start Location`)) + 
+  geom_bar(position = "stack", stat = "identity") +
+  scale_color_brewer(palette = "Dark2")+ 
+  ggtitle("Percent of Population Racially White")
+
+unep <- no_location_trimmed_df %>%
+  filter(Measure == "Unemployment Rate")
+
+unep_bar <- unep%>%
+  ggplot(aes(y = Percent, x = `Head Start Location`, fill = `Head Start Location`)) + 
+  geom_bar(position = "stack", stat = "identity") +
+  scale_color_brewer(palette = "Dark2")+ 
+  ggtitle("Aggregate Unemployment Rate from 2013-2018")
+
+
