@@ -706,10 +706,9 @@ med_age_map <- mapview(med_age, zcol = "Est", layer.name = "Median Age")
 med_age_map
 
 
-
 #### statistically analysis of these locations vs current head start locations ####
 
-
+names(noloc_complete_df)
 
 Loc6 <- noloc_complete_df %>%
   filter(`Head Start Location` == "Loc6")
@@ -799,15 +798,8 @@ l6data_table <- datatable(Loc6, caption = "Census Tract 610")
 
 l6data_table
 
-l6cf
-
+l6bc
 #loc8
-
-
-l8data_table <- datatable(Loc8, caption = "Census Tract 613")
-
-l8data_table
-
 
 
 Loc8_vs_bc_perc <- significance(Loc8$Percent, boonescreek$Percent, Loc8$`Percent Margin of Error`, boonescreek$`Percent Margin of Error`, 0.95)
@@ -875,9 +867,6 @@ l8db <- datatable(Loc8_vs_dunbar)
 l8hm <- datatable(Loc8_vs_harmony)
 l8gv <- datatable(Loc8_vs_grandview)
 l8ss <- datatable(Loc8_vs_southside)
-
-l8cf
-l8db
 
 #loc4
 
@@ -948,8 +937,6 @@ l4hm <- datatable(Loc4_vs_harmony)
 l4gv <- datatable(Loc4_vs_grandview)
 l4ss <- datatable(Loc4_vs_southside)
 
-l4cf
-l4db
 #loc3
 
 
@@ -1019,8 +1006,6 @@ l3hm <- datatable(Loc3_vs_harmony)
 l3gv <- datatable(Loc3_vs_grandview)
 l3ss <- datatable(Loc3_vs_southside)
 
-l3cf
-l3db
 #loc2
 
 
@@ -1090,8 +1075,6 @@ l2hm <- datatable(Loc2_vs_harmony)
 l2gv <- datatable(Loc2_vs_grandview)
 l2ss <- datatable(Loc2_vs_southside)
 
-l2cf
-l2db
 #loc 15
 
 
@@ -1160,33 +1143,3 @@ l15db <- datatable(Loc15_vs_dunbar)
 l15hm <- datatable(Loc15_vs_harmony)
 l15gv <- datatable(Loc15_vs_grandview)
 l15ss <- datatable(Loc15_vs_southside)
-
-l15cf
-l15db
-
-#combine all this for a candidate map 
-names(loc_complete_df)
-
-mLoc6 <- loc_complete_df %>%
-  filter(Location == "Loc6")
-
-mLoc8 <- loc_complete_df %>%
-  filter(Location == "Loc8")
-
-mLoc4 <- loc_complete_df %>%
-  filter(Location == "Loc4")
-
-mLoc3 <- loc_complete_df %>%
-  filter(Location == "Loc3")
-
-mLoc2 <- loc_complete_df %>%
-  filter(Location == "Loc2")
-
-mLoc15 <- loc_complete_df %>%
-  filter(Location == "Loc15")
-
-loc_map_df <- rbind(mLoc6, mLoc8, mLoc4, mLoc3, mLoc2, mLoc15)
-
-cand_map <-mapview(loc_map_df, zcol = "Location", layer.name = "Candidate Tracts", legend = FALSE)
-
-cand_map

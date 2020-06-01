@@ -1,4 +1,27 @@
-#### Kepler Head Start Investigation ####
+---
+title: "Head Start Measures for Washington County"
+author: "Paul Collins"
+date: '`r format(Sys.Date(), "%m/%d/%Y")`'
+output: 
+  prettydoc::html_pretty:
+    theme: tactile
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Summary
+
+Census tracts in Washington County Tennessee were examined for their suitability for Head Start classrooms using 5 year estimates from the 2018 American Community Survey (ACS) data from the United States Census Bureau. The tracts were ranked in various metrics pertaining to Head Start and then statistically compared to tracts already containing a Head Start classroom. Based on this information, the top six most in need census tracts are tract 610, tract 613, tract 606, tract 605.02, tract 605.01, and tract 620. As always, the decision to open a classroom in these locations is dependent on a multitude of other factors including funding, physical location restrictions, and many other factors. 
+ 
+# Methods 
+
+The data for Washington County census tracts (and one from Greene County) was pulled from the census website into R and was then cleaned and processed. A total of 25 census tracts were analyzed. Tracts that currently have a Head Start Classroom were designated by their classroom names and locations without current classrooms were given generic names of “Loc1” through “Loc15”. Various data visualizations and tables were constructed to determine where tracks fell in various categories and to see which locations that did not contain a Head Start would be most suitable. Once the top 5 tracts that do not contain a Head Start were selected, these tracks were tested for statistical significance at a 95% confidence level using the estimate and margin of error for the various measures. Tracts were tested against all current Washington County Head Start locations. Based on previous work, the tracts containing the Head Start classrooms Dunbar and Children First were the tracts with the most need in Washington County. Therefore, the candidate tracts performance against these two locations are discussed below. 
+
+
+```{r load packages and code, echo = FALSE, include = FALSE}
 
 #### load packages ####  
 
@@ -95,18 +118,18 @@ Washington_dp04_18 <- inner_join(Washington_dp04_2018, dp_table_variables_18, by
 Washington_dp05_18 <- inner_join(Washington_dp05_2018, dp_table_variables_18, by = "variable")
 
 Washington_data_profile <- rbind(Washington_dp02_18, Washington_dp03_18, Washington_dp04_18, Washington_dp05_18)
+```
 
-
-
+```{r code, echo = FALSE}
 ### use geoid's because its easier to filter ###
 
 wash_hs_GEOID <- c(47179061901, 47179061402, 47179060900, 47179061100, 47179060100, 47179061602, 47179061902, 47179060800)
 
 chuckey_hs_GEOID <- c(47059090900)
 
+
 wash_nohs_GEOID <-c(47179060400,47179060501,47179060502, 47179060600, 47179060700, 47179061000, 47179061200, 47179061300, 47179061401, 47179061500, 47179061601,
 47179061701, 47179061702,47179061800, 47179062000)
-
 
 
 wash_hs_tracts <- Washington_data_profile %>%
@@ -192,7 +215,7 @@ ss <- cbind(school, southside)
 
 pretty_tracts <- rbind(sc, chu, wv, bc, cf, lt, dun, harm, gv, ss)
 
-View(pretty_tracts)
+
 
 
 ####pull out the variables we need ####
@@ -207,7 +230,6 @@ hs_vars_names <- c("Grandparent living in household and responsible for children
                    "Children enrolled in preschool or nursery school", "Citizens with a Disability", "Population ESL", "Households with a Computer", "Households with Broadband internet", "Unemployment Rate", "Median Income",
                    "Total Households with Cash Public Assistance", "Total Households with SNAP", "Percentage of all families below poverty line", "Poverty Rate for children under 5",
                    "Total Population", "Population Age under 5","Median Age", "Population Racially White")
-
 
 df_tracts <- pretty_tracts %>%
   filter(variable %in% hs_vars)
@@ -231,11 +253,11 @@ names(no_location_trimmed_df) <- hs_table_names
 
 wash_hs_datatable <- datatable(no_location_trimmed_df, caption = "Various Metrics for Washington County (and Chuckey) Census Tracts Containing a Head Start")
 
-wash_hs_datatable
+
 
 ##pdf table##
 
-xtable(no_location_trimmed_df %>% filter(`Head Start Location`== "South Central"))
+#xtable(no_location_trimmed_df %>% filter(`Head Start Location`== "South Central"))
 
 ###### repeat that for washington county tracts without a head start ####
 
@@ -373,36 +395,6 @@ names(no_location_trimmed_nohs_df) <- nohs_table_names
 
 wash_nohs_datatable <- datatable(no_location_trimmed_nohs_df, caption = "Various Metrics for Washington County Census Tracts WITHOUT a Head Start")
 
-wash_nohs_datatable
-
-### worry about this ^^^ later ##
-
-### test for differences between south central and other head start school tracts ####
-
-wash_hs_datatable
-
-#gp < 1
-#gp 1-2
-#gp 3-4
-#enrolled in preschool
-#disability
-#esl
-#household with computer
-#household with internet
-#unemployment rate
-#median income
-#cash public assistance
-#snap
-#all fam below poverty line
-#all families with children <5 below poverty line
-#total pop
-#total pop under 5
-#median age
-#pop racially white
-
-
-### try and write a function that does this at once
-head(no_location_trimmed_df)
 
 easy <- no_location_trimmed_df
 
@@ -501,14 +493,14 @@ southcentral_vs_southside <- data.frame(vector_names, sc_vs_ss_perc, sc_vs_ss_co
 
 #data tables of significance
 
-datatable(southcentral_vs_boonescreek)
-datatable(southcentral_vs_chuckey)
-datatable(southcentral_vs_childrenfirst)
-datatable(southcentral_vs_laketerrace)
-datatable(southcentral_vs_dunbar)
-datatable(southcentral_vs_harmony)
-datatable(southcentral_vs_grandview)
-datatable(southcentral_vs_southside)
+#datatable(southcentral_vs_boonescreek)
+#datatable(southcentral_vs_chuckey)
+#datatable(southcentral_vs_childrenfirst)
+#datatable(southcentral_vs_laketerrace)
+#datatable(southcentral_vs_dunbar)
+#datatable(southcentral_vs_harmony)
+#datatable(southcentral_vs_grandview)
+#datatable(southcentral_vs_southside)
 
 ## other tables for report 
 
@@ -575,26 +567,32 @@ noloc_complete_df <- rbind(no_location_trimmed_nohs_df, no_location_trimmed_df)
 
 loc_complete_df <- rbind(nohs_map_df, hs_map_df)
 
+```
+
+
+```{r data table for all of washington count, echo = FALSE}
+
 #### data table stuff ####
 
 wash_dt <- datatable(noloc_complete_df, caption = "Various Measures for Washington County")
 
 wash_dt
-
-
 ####map stuff ####
 
 tract_map <- mapview(loc_complete_df, zcol = "Tract", legend = FALSE)
 
 tract_map
+```
 
+
+# Results 
+
+Data tables and visualizations for the data follow. A searchable data table is first, showing the metrics used in this analysis by location. A reference map is next, showing the location for census tracts within the county. The candidate tracts were selected based on their rankings of childhood poverty rate, overall poverty rate, percent of population under 5 years of age, and percent of population that speak English as a second language (ESL). Tracts 610, 613, 606, 605.02, 605.01, and 620 were the most promising tracts based on these factors, and they will be discussed individually on their profiles and statistical significance when compared with the current Dunbar and Children First locations.
+
+```{r median income map, echo = FALSE, message = FALSE}
 #median income
 
 med_income <-loc_complete_df %>%
-  filter(Measure == "Median Income")
-
-
-loc_complete_df %>%
   filter(Measure == "Median Income")
 
 
@@ -628,6 +626,8 @@ all_pop_under_5_bar <- pop_under_5 %>%
 all_pop_under_5_bar
 
 pop_under_5_map <- mapview(pop_under_5, zcol = "Percent", legdend = TRUE, layer.name = "Percent Pop. Under 5")
+
+pop_under_5_map
 
 #childhood poverty
 
@@ -705,11 +705,9 @@ med_age_map <- mapview(med_age, zcol = "Est", layer.name = "Median Age")
 
 med_age_map
 
+```
 
-
-#### statistically analysis of these locations vs current head start locations ####
-
-
+```{r data for individual candidate tracts, echo = FALSE}
 
 Loc6 <- noloc_complete_df %>%
   filter(`Head Start Location` == "Loc6")
@@ -728,6 +726,154 @@ Loc2 <- noloc_complete_df %>%
 
 Loc15 <- noloc_complete_df %>%
   filter(`Head Start Location` == "Loc15")
+
+candidate_df <- rbind(Loc6, Loc8, Loc4, Loc3, Loc2, Loc15)
+
+
+```
+
+# Map of Candidate Tracts
+
+```{r map of candidate tracts, echo = FALSE}
+
+mLoc6 <- loc_complete_df %>%
+  filter(Location == "Loc6")
+
+mLoc8 <- loc_complete_df %>%
+  filter(Location == "Loc8")
+
+mLoc4 <- loc_complete_df %>%
+  filter(Location == "Loc4")
+
+mLoc3 <- loc_complete_df %>%
+  filter(Location == "Loc3")
+
+mLoc2 <- loc_complete_df %>%
+  filter(Location == "Loc2")
+
+mLoc15 <- loc_complete_df %>%
+  filter(Location == "Loc15")
+
+loc_map_df <- rbind(mLoc6, mLoc8, mLoc4, mLoc3, mLoc2, mLoc15)
+
+cand_map <-mapview(loc_map_df, zcol = "Location", layer.name = "Candidate Tracts", legend = FALSE)
+
+cand_map
+
+
+```
+
+# Data Table of Candidate Tracts
+
+```{r data table, echo = FALSE}
+
+candidate_df <- rbind(Loc6, Loc8, Loc4, Loc3, Loc2, Loc15)
+
+candidate_datatable <- datatable(candidate_df, caption = "Six Candidate Tracts")
+
+candidate_datatable
+
+```
+
+# Tract 610 
+
+Census tract 610 is located along East Unaka and East Watauga Ave in Johnson City. The median income was $30,637 (21 of 25). The poverty rate for children under 5 was 92.1% (25 of 25), and 29.9% of all households are below the poverty line (23 of 25). The 5 year aggregate unemployment rate was 7% (18 of 25). 4.1% of the population was below 5 years of age (20 of 25), and 2.8% of the population are ESL (15 of 25). 30.2% of households receive SNAP benefits (4 of 25). 86.8% of the population is racially white, the 5th lowest in Washington County (5 of 25), and the median age was 37.6 (7 of 25). 
+
+When compared with the tract containing Children First, the only statistically significant difference was  Children First had 14.6% of its population under the age of 5, while tract 610 had 4.1%. When compared with the tract containing Dunbar, there were two statistically significant differences. Dunbar had a higher ESL population percentage (8.7% vs. 2.8%) and tract 610 had a higher poverty rate for children under 5 (92.1% vs 44.8%). These tests suggest a strong need for a Head Start Location in this area.
+
+
+```{r tract 610, echo = FALSE}
+
+l6data_table <- datatable(Loc6, caption = "Census Tract 610")
+
+l6data_table
+
+
+```
+
+# Tract 613 
+
+Census tract 613 is located in the area along Bristol Highway up to Interstate 26 in Johnson City. The median income was $54,567 (8 of 25) and the poverty rate for children under 5 was 40.9% (21 of 25). 9.3% (11 of 25) of all households were below the poverty line. The 5 year aggregate unemployment rate was 4.9% (14 of 25). 4.8% of the population was below 5 years of age (13 of 25), and 10.6% of the population are ESL (1 of 25), the highest in Washington County. 5.2% of households receive SNAP benefits (24 of 25).  90.3% of the population is racially white (11 of 25), and the median age is 41.1 (11 of 25).
+
+When compared with the tract containing Children First, tract 613 had significantly lower percentage of families receiving SNAP benefits, significantly lower percentage of population under 5, significantly lower percentage of all families below the poverty line, a significantly higher ESL population, and a significantly higher median income. When compared with Dunbar, tract 613 had a significantly lower 5 year aggregate unemployment rate, significantly higher median income, significantly lower percentage of families below the poverty line, and a significantly higher median age. 
+
+
+```{r tract 613, echo = FALSE}
+
+l8data_table <- datatable(Loc8, caption = "Census Tract 613")
+
+l8data_table
+
+```
+
+# Tract 606 
+
+Census tract 606 is located south of ETSU and boarders Carter County. The median income was $38,704 (17 of 25). The poverty rate for children under 5 was 40.1% (20 of 25). 18.2% (19 of 25) of all households were below the poverty line. The 5 year aggregate unemployment rate was 8.6% (21 of 25). 3.6% of the population was below 5 years of age (22 of 25), and 9.9% of the population are ESL (2 of 25). 10.4% of the population receive SNAP benefits (16 of 25), 87.1% of the population is racially white (6 of 25), and the median age is 27.4 (2 of 25), the lowest in Washington County outside of the track containing ETSU. 
+
+When compared with Children First, census tract 606 had a significantly lower percentage of total households receiving SNAP benefits, percentage of the population below age 5, significantly lower percentage of all families below the poverty line, and significantly higher median income. When compared with Dunbar, census tract 606 had significantly lower percentage of families with SNAP benefits, percentage of families below the poverty line, and a significantly higher median income. 
+
+
+
+```{r tract 606, echo = FALSE}
+
+l4data_table <- datatable(Loc4, caption = "Census Tract 606")
+
+l4data_table
+
+```
+
+# Tract 605.02
+
+Census tract 605.02 is located between Johnson City and Jonesboro. The median income was $41,413 (13 of 25). The poverty rate for children under 5 was 39.3% (19 of 25). 13.8% (17 of 25) of all households were below the poverty line. The 5 year aggregate unemployment rate was 3.7% (10 of 25). 4.7% of the population was below 5 years of age (24 of 25), and 8.9% of the population are ESL (5 of 25). 11.9% of the population receive SNAP benefits (13 of 25), 88.4% of the population is racially white (8 of 25), and median age of 38.1 (8 of 25). 
+
+When compared with Children First, tract 605.02 had a significantly higher percentage of ESL, a significantly lower 5 year aggregate unemployment rate, significantly lower percentage of families receiving SNAP benefits, significantly lower percentage of families below the poverty line, significantly lower percentage of the population below age 5, and a significantly higher median income. When compared with Dunbar, tract 605.02 had a significantly lower 5 year aggregate unemployment rate, significantly lower percentage of families receiving SNAP benefits, significantly lower percentage of all families below the poverty line, and significantly higher median income. 
+
+```{r tract 605.02, echo = FALSE}
+
+l3data_table <- datatable(Loc3, caption = "Census Tract 605.02")
+
+l3data_table
+
+```
+
+# Tract 605.01
+
+Census tract 605.01 is located in the West Market Street area on the Western side of State of Franklin Road. The median income was $28,349 (23 of 25), the lowest in Washington County without a Head Start Location. The poverty rate for children under 5 was 35% (18 of 25). 19.8% (20 of 25) of all households were below the poverty line. The 5 year aggregate unemployment rate was 6% (16 of 25). 4.5% of the population was below 5 years of age (15 of 25), and 4.2% of the population are ESL (12 of 25). 23% of the population receive SNAP benefits (5 of 25), 90.5% of the population is racially white (12 of 25), and the median age is 44.9 (19 of 25). 
+
+When compared with Children First, tract 605.01 had significantly lower percentage of families receiving SNAP benefits, lower percentage of all families below the poverty line, lower percentage of population under age 5, and significantly higher median age. When compared with Dunbar, tract 605.01 had significantly lower 5-year aggregate unemployment rate, significantly higher median age, and significantly higher median income.
+
+
+```{r tract 605.01, echo = FALSE}
+
+l2data_table <- datatable(Loc2, caption = "Census Tract 605.01")
+
+l2data_table
+
+
+```
+
+# Tract 620
+
+Census tract 620 is located near the Clark Manor neighborhood. The median income was $33,947 (20 of 25). The poverty rate for children under 5 was only 3.5% (8 of 25) but not significantly different than the rate for the tract containing the Harmony classroom (8%). 9.4% (12 of 25) of all households were below the poverty line. The 5-year aggregate unemployment rate was 5.7% (15 of 25). 6.6% of the population was below 5 years of age (4 of 25), and 9.1% of the population are ESL (3 of 25). 16.7% of the population receive SNAP benefits (9 of 25), 81.3% of the population is racially white (2 of 25) and the median age is 42.3 (15 of 25). 
+
+When compared with Children First, census tract 620 had a significantly higher ESL population, significantly lower percentage of households receiving SNAP benefits, significantly lower percentage of total families below the poverty line, significantly lower total population under age 5, significantly higher median age and median income. When compared with Dunbar, tract 620 had a significantly higher median income, significantly lower unemployment rate, significantly lower total households receiving SNAP benefits, significantly lower poverty rate for children under 5 and all families, and significantly lower population that is racially white. 
+
+```{r tract 620, echo = FALSE}
+
+l15data_table <- datatable(Loc15, caption = "Census Tract 620")
+
+l15data_table
+
+```
+
+# Conclusion
+
+In conclusion, six potential census tracts for a future Head Start location in Washington County were identified using the 2018 ACS data. These tracts were ranked in various categories and statistically tested against census tracts that currently contain a Head Start in Washington County. The data suggests tract 620 is in the most need of a Head Start location, but all six tracts presented have needs. As always, the select of Head Start classrooms are determined by many other factors besides data, and these factors should be considered before any final selection is made. 
+
+```{r statistical tests, echo = FALSE}
+
+#### statistically analysis of these locations vs current head start locations ####
+
 
 loc6_vs_bc_perc <- significance(Loc6$Percent, boonescreek$Percent, Loc6$`Percent Margin of Error`, boonescreek$`Percent Margin of Error`, 0.95)
 
@@ -795,19 +941,9 @@ l6hm <- datatable(Loc6_vs_harmony)
 l6gv <- datatable(Loc6_vs_grandview)
 l6ss <- datatable(Loc6_vs_southside)
 
-l6data_table <- datatable(Loc6, caption = "Census Tract 610")
 
-l6data_table
-
-l6cf
 
 #loc8
-
-
-l8data_table <- datatable(Loc8, caption = "Census Tract 613")
-
-l8data_table
-
 
 
 Loc8_vs_bc_perc <- significance(Loc8$Percent, boonescreek$Percent, Loc8$`Percent Margin of Error`, boonescreek$`Percent Margin of Error`, 0.95)
@@ -875,9 +1011,6 @@ l8db <- datatable(Loc8_vs_dunbar)
 l8hm <- datatable(Loc8_vs_harmony)
 l8gv <- datatable(Loc8_vs_grandview)
 l8ss <- datatable(Loc8_vs_southside)
-
-l8cf
-l8db
 
 #loc4
 
@@ -948,8 +1081,6 @@ l4hm <- datatable(Loc4_vs_harmony)
 l4gv <- datatable(Loc4_vs_grandview)
 l4ss <- datatable(Loc4_vs_southside)
 
-l4cf
-l4db
 #loc3
 
 
@@ -1019,8 +1150,6 @@ l3hm <- datatable(Loc3_vs_harmony)
 l3gv <- datatable(Loc3_vs_grandview)
 l3ss <- datatable(Loc3_vs_southside)
 
-l3cf
-l3db
 #loc2
 
 
@@ -1090,8 +1219,6 @@ l2hm <- datatable(Loc2_vs_harmony)
 l2gv <- datatable(Loc2_vs_grandview)
 l2ss <- datatable(Loc2_vs_southside)
 
-l2cf
-l2db
 #loc 15
 
 
@@ -1161,32 +1288,6 @@ l15hm <- datatable(Loc15_vs_harmony)
 l15gv <- datatable(Loc15_vs_grandview)
 l15ss <- datatable(Loc15_vs_southside)
 
-l15cf
-l15db
 
-#combine all this for a candidate map 
-names(loc_complete_df)
+```
 
-mLoc6 <- loc_complete_df %>%
-  filter(Location == "Loc6")
-
-mLoc8 <- loc_complete_df %>%
-  filter(Location == "Loc8")
-
-mLoc4 <- loc_complete_df %>%
-  filter(Location == "Loc4")
-
-mLoc3 <- loc_complete_df %>%
-  filter(Location == "Loc3")
-
-mLoc2 <- loc_complete_df %>%
-  filter(Location == "Loc2")
-
-mLoc15 <- loc_complete_df %>%
-  filter(Location == "Loc15")
-
-loc_map_df <- rbind(mLoc6, mLoc8, mLoc4, mLoc3, mLoc2, mLoc15)
-
-cand_map <-mapview(loc_map_df, zcol = "Location", layer.name = "Candidate Tracts", legend = FALSE)
-
-cand_map
